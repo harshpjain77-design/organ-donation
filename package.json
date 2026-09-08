@@ -1,0 +1,30 @@
+{
+  "name": "decentralized-organ-donation",
+  "version": "1.0.0",
+  "description": "Decentralized Organ Donor & Recipient Matcher with Blockchain Audit Trails and IPFS Storage",
+  "main": "index.js",
+  "scripts": {
+    "compile": "npx hardhat compile",
+    "test:contracts": "npx hardhat test",
+    "node:hardhat": "npx hardhat node",
+    "deploy:local": "npx hardhat run scripts/deploy.js --network localhost",
+    "backend": "cd backend && npm run start",
+    "backend:dev": "cd backend && npm run dev",
+    "frontend": "cd frontend && npm run dev"
+  },
+  "keywords": [
+    "blockchain",
+    "solidity",
+    "organ-donation",
+    "ipfs",
+    "react",
+    "ethereum",
+    "hardhat"
+  ],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "@nomicfoundation/hardhat-toolbox": "^4.0.0",
+    "hardhat": "^2.29.1"
+  }
+}
