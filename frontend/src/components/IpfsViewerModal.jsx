@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { X, HardDrive, ExternalLink, ShieldCheck, Copy, Check, FileCode, Info, Globe, Server } from 'lucide-react';
+import { X, HardDrive, ExternalLink, ShieldCheck, Copy, Check, FileCode } from 'lucide-react';
 import { getIpfsContent } from '../services/api';
+import { Button } from './ui';
 
-export default function IpfsViewerModal({ cid, title = 'IPFS Medical Document Vault', onClose }) {
+export default function IpfsViewerModal({ cid, title = 'IPFS medical document', onClose }) {
   const [loading, setLoading] = useState(true);
   const [ipfsData, setIpfsData] = useState(null);
   const [copied, setCopied] = useState(false);
@@ -11,11 +12,11 @@ export default function IpfsViewerModal({ cid, title = 'IPFS Medical Document Va
     if (!cid) return;
     setLoading(true);
     getIpfsContent(cid)
-      .then(res => {
+      .then((res) => {
         setIpfsData(res);
         setLoading(false);
       })
-      .catch(err => {
+      .catch((err) => {
         console.error(err);
         setLoading(false);
       });
@@ -30,128 +31,83 @@ export default function IpfsViewerModal({ cid, title = 'IPFS Medical Document Va
   if (!cid) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-fadeIn">
-      <div className="bg-[#0b0f19] border border-slate-800 rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl">
-        {/* Header */}
-        <div className="p-6 border-b border-slate-800 flex items-center justify-between sticky top-0 bg-[#0b0f19] z-10">
-          <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 rounded-xl bg-purple-500/10 border border-purple-500/30 flex items-center justify-center text-purple-400">
-              <HardDrive className="w-5 h-5" />
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#0a0e16]/80 p-4 backdrop-blur-sm animate-fadeIn">
+      <div className="ui-card max-h-[90vh] w-full max-w-2xl overflow-y-auto">
+        <div className="sticky top-0 z-10 flex items-start justify-between gap-4 border-b border-white/10 bg-[#101622]/95 px-6 py-5">
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-violet-500/10 text-violet-300">
+              <HardDrive className="h-5 w-5" />
             </div>
             <div>
-              <h3 className="text-lg font-bold text-white">{title}</h3>
-              <p className="text-xs text-slate-400">InterPlanetary File System (IPFS) Decentralized Vault</p>
+              <h3 className="text-lg font-semibold text-white">{title}</h3>
+              <p className="text-xs text-slate-500">Decentralized document vault</p>
             </div>
           </div>
-          <button
-            onClick={onClose}
-            className="p-2 text-slate-400 hover:text-white rounded-lg bg-slate-900 hover:bg-slate-800 transition-all border border-slate-800"
-          >
-            <X className="w-5 h-5" />
+          <button type="button" onClick={onClose} className="rounded-lg p-2 text-slate-400 hover:bg-white/5 hover:text-white">
+            <X className="h-5 w-5" />
           </button>
         </div>
 
-        {/* Content */}
-        <div className="p-6 space-y-6">
-          {/* CID Banner */}
-          <div className="bg-[#060911] p-4 rounded-xl border border-slate-800">
-            <span className="text-xs font-semibold text-purple-400 uppercase tracking-wider block mb-1 font-mono">
-              IPFS Content Identifier (CID v0)
-            </span>
-            <div className="flex items-center justify-between font-mono text-xs text-slate-200 bg-slate-900 p-2.5 rounded-lg border border-slate-800 break-all">
-              <span>{cid}</span>
+        <div className="space-y-5 p-6">
+          <div className="rounded-xl border border-white/10 bg-[#0b101a] p-4">
+            <p className="mb-2 text-[11px] uppercase tracking-wide text-violet-300">Content ID</p>
+            <div className="flex items-center justify-between gap-2 rounded-lg border border-white/10 bg-[#080c14] p-2.5 font-mono text-xs text-slate-200">
+              <span className="break-all">{cid}</span>
               <button
+                type="button"
                 onClick={() => copyToClipboard(cid)}
-                className="ml-2 p-1.5 text-slate-400 hover:text-white rounded bg-slate-800 hover:bg-slate-700 shrink-0"
+                className="shrink-0 rounded-md bg-white/5 p-1.5 text-slate-400 hover:text-white"
               >
-                {copied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+                {copied ? <Check className="h-3.5 w-3.5 text-emerald-400" /> : <Copy className="h-3.5 w-3.5" />}
               </button>
             </div>
           </div>
 
-          {/* Mode Banner Explanation */}
-          <div className="bg-purple-500/10 border border-purple-500/20 p-3.5 rounded-xl text-xs space-y-1.5">
-            <div className="flex items-center space-x-2 text-purple-300 font-bold">
-              <Info className="w-4 h-4 text-purple-400 shrink-0" />
-              <span>IPFS Gateway Access & Network Mode</span>
-            </div>
-            <p className="text-slate-300 leading-relaxed text-[11px]">
-              {ipfsData?.isPublicPin ? (
-                <span className="text-emerald-400 font-semibold">
-                  ✓ Document is pinned directly to the global public IPFS network via Pinata API!
-                </span>
-              ) : (
-                <span>
-                  Currently served live via the <strong>Local Node Gateway</strong>. Public IPFS web gateways (like <code className="text-purple-300">ipfs.io</code>) require third-party network propagation or Pinata JWT keys configured in <code className="text-purple-300">backend/.env</code>.
-                </span>
-              )}
-            </p>
-          </div>
-
           {loading ? (
-            <div className="py-12 flex flex-col items-center justify-center text-slate-400 space-y-3">
-              <div className="w-8 h-8 border-2 border-purple-500 border-t-transparent rounded-full animate-spin"></div>
-              <p className="text-xs font-medium font-mono">Retrieving payload from IPFS node...</p>
+            <div className="flex flex-col items-center justify-center space-y-3 py-12 text-slate-400">
+              <div className="h-8 w-8 animate-spin rounded-full border-2 border-violet-400 border-t-transparent" />
+              <p className="text-xs">Retrieving payload…</p>
             </div>
           ) : (
             <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="bg-[#060911] p-3 rounded-lg border border-slate-800">
-                  <span className="text-[11px] text-slate-400 block font-mono uppercase">SHA-256 Digest</span>
-                  <span className="text-xs font-mono font-bold text-slate-200 truncate block mt-0.5">
-                    {ipfsData?.sha256Hash || 'SHA-256 Verified'}
-                  </span>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="rounded-xl border border-white/10 bg-[#0b101a] p-3">
+                  <p className="text-[11px] text-slate-500">Checksum</p>
+                  <p className="truncate font-mono text-xs text-slate-200">{ipfsData?.sha256Hash || 'SHA-256'}</p>
                 </div>
-                <div className="bg-[#060911] p-3 rounded-lg border border-slate-800">
-                  <span className="text-[11px] text-slate-400 block font-mono uppercase">Pin Timestamp</span>
-                  <span className="text-xs font-mono font-bold text-slate-200 block mt-0.5">
+                <div className="rounded-xl border border-white/10 bg-[#0b101a] p-3">
+                  <p className="text-[11px] text-slate-500">Uploaded</p>
+                  <p className="font-mono text-xs text-slate-200">
                     {ipfsData?.uploadedAt ? new Date(ipfsData.uploadedAt).toLocaleString() : 'Recent'}
-                  </span>
+                  </p>
                 </div>
               </div>
-
-              {/* JSON Payload Viewer */}
               <div>
-                <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider block mb-2 flex items-center font-mono">
-                  <FileCode className="w-3.5 h-3.5 mr-1.5 text-slate-400" /> Decrypted Off-Chain Medical Payload
-                </span>
-                <pre className="bg-[#060911] p-4 rounded-xl border border-slate-800 font-mono text-xs text-cyan-300 overflow-x-auto max-h-60">
+                <p className="mb-2 flex items-center text-[11px] uppercase tracking-wide text-slate-500">
+                  <FileCode className="mr-1.5 h-3.5 w-3.5" /> Payload
+                </p>
+                <pre className="max-h-60 overflow-x-auto rounded-xl border border-white/10 bg-[#0b101a] p-4 font-mono text-xs text-teal-200">
                   {JSON.stringify(ipfsData?.content || ipfsData, null, 2)}
                 </pre>
               </div>
-
-              <div className="flex items-center space-x-2 text-xs text-purple-300 bg-purple-500/10 p-3 rounded-lg border border-purple-500/20">
-                <ShieldCheck className="w-4 h-4 shrink-0 text-purple-400" />
-                <span>
-                  The hash of this document is immutably linked to the Ethereum Smart Contract ledger.
-                </span>
+              <div className="flex gap-2 rounded-xl border border-violet-400/20 bg-violet-500/10 p-3 text-xs text-violet-200">
+                <ShieldCheck className="h-4 w-4 shrink-0 text-violet-300" />
+                Record hash is pinned on-chain for verification.
               </div>
             </div>
           )}
         </div>
 
-        {/* Footer Gateway Buttons */}
-        <div className="p-4 border-t border-slate-800 bg-[#0b0f19] flex flex-wrap gap-2 justify-between items-center text-xs">
-          <a
-            href={`/api/ipfs/${cid}`}
-            target="_blank"
-            rel="noreferrer"
-            className="bg-purple-600 hover:bg-purple-500 text-white font-bold px-4 py-2 rounded-xl flex items-center space-x-1.5 transition-all"
-          >
-            <Server className="w-3.5 h-3.5" />
-            <span>Open Local Node Gateway (Live Payload)</span>
-          </a>
-
+        <div className="flex items-center justify-between border-t border-white/10 px-6 py-4">
           <a
             href={`https://ipfs.io/ipfs/${cid}`}
             target="_blank"
             rel="noreferrer"
-            className="bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-700 px-4 py-2 rounded-xl font-semibold flex items-center space-x-1.5 transition-all"
+            className="inline-flex items-center gap-1 text-xs font-medium text-violet-300 hover:text-violet-200"
           >
-            <Globe className="w-3.5 h-3.5 text-purple-400" />
-            <span>Public Gateway (ipfs.io)</span>
-            <ExternalLink className="w-3 h-3 text-slate-500" />
+            Public gateway <ExternalLink className="h-3.5 w-3.5" />
           </a>
+          <Button variant="secondary" onClick={onClose}>Close</Button>
         </div>
       </div>
     </div>

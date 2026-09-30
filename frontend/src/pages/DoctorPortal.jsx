@@ -1,13 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { Stethoscope, CheckCircle2, HardDrive, Clock, ShieldCheck, Award, FileText, Lock, AlertCircle } from 'lucide-react';
+import { Stethoscope, CheckCircle2, HardDrive, Award, FileText, AlertCircle } from 'lucide-react';
 import { getMatches, approveByDoctor } from '../services/api';
+import { PageHeader, Card, Button, Badge, AlertBanner, EmptyState } from '../components/ui';
 
 export default function DoctorPortal({ currentRole, walletState, onOpenIpfs, onOpenBreakdown }) {
   const [matches, setMatches] = useState([]);
-  const [loading, setLoading] = useState(true);
   const [approvingId, setApprovingId] = useState(null);
   const [doctorNotesMap, setDoctorNotesMap] = useState({});
-
   const isDoctorSession = currentRole === 'Doctor' || currentRole === 'Admin';
 
   useEffect(() => {
@@ -15,14 +14,11 @@ export default function DoctorPortal({ currentRole, walletState, onOpenIpfs, onO
   }, []);
 
   const loadMatches = async () => {
-    setLoading(true);
     try {
       const res = await getMatches();
       setMatches(res.data || []);
     } catch (err) {
       console.error(err);
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -35,7 +31,6 @@ export default function DoctorPortal({ currentRole, walletState, onOpenIpfs, onO
         notes,
         walletState?.address || '0x8626f69A7373073758299836439446777AD2D2b1'
       );
-
       if (res.success) {
         loadMatches();
         alert(`Match ${matchId} successfully verified by Doctor on Blockchain Ledger!`);
@@ -51,136 +46,103 @@ export default function DoctorPortal({ currentRole, walletState, onOpenIpfs, onO
 
   return (
     <div className="space-y-8 animate-fadeIn">
-      {/* Header */}
-      <div className="bg-slate-900 p-6 rounded-2xl border border-slate-800 flex items-center justify-between">
-        <div>
-          <div className="flex items-center space-x-2 text-purple-400 font-semibold text-xs uppercase tracking-wider">
-            <Stethoscope className="w-4 h-4" />
-            <span>Doctor Verification Subsystem</span>
-          </div>
-          <h2 className="text-2xl font-extrabold text-white mt-1">Doctor Workbench & Medical Sign-Off</h2>
-          <p className="text-xs text-slate-400 mt-1">
-            Doctors inspect candidate medical files from IPFS and sign digital approvals before hospital clearance.
-          </p>
-        </div>
-      </div>
+      <PageHeader
+        accent="purple"
+        eyebrow="Clinical"
+        title="Doctor workbench"
+        description="Inspect IPFS reports and sign medical approval before hospital clearance."
+      />
 
-      {/* Role Session Banner */}
       {!isDoctorSession ? (
-        <div className="bg-purple-500/10 border border-purple-500/30 p-4 rounded-xl flex items-center space-x-3 text-xs">
-          <AlertCircle className="w-5 h-5 text-purple-400 shrink-0" />
-          <div className="text-purple-200">
-            <strong className="font-bold text-white">Preview Mode: </strong>
-            You are currently viewing Doctor Workbench from the <span className="underline font-semibold">{currentRole}</span> perspective. Switch active perspective to <strong className="text-purple-400 font-semibold">Doctor Workbench</strong> in the top header bar to sign off approvals.
-          </div>
-        </div>
+        <AlertBanner tone="purple" icon={AlertCircle}>
+          Preview only. Switch perspective to <strong>Doctor</strong> to sign approvals.
+        </AlertBanner>
       ) : (
-        <div className="bg-emerald-500/10 border border-emerald-500/30 p-4 rounded-xl flex items-center justify-between text-xs">
-          <div className="flex items-center space-x-2 text-emerald-400 font-semibold">
-            <CheckCircle2 className="w-4 h-4" />
-            <span>Authorized Doctor Session Active (Wallet: <span className="font-mono">{walletState.address.substring(0, 8)}...</span>)</span>
-          </div>
-          <span className="bg-emerald-500/20 text-emerald-300 px-2.5 py-0.5 rounded-full font-mono text-[11px]">Attending Physician Role</span>
-        </div>
+        <AlertBanner
+          tone="emerald"
+          icon={CheckCircle2}
+          trailing={<Badge tone="emerald">Physician</Badge>}
+        >
+          Authorized session · <span className="font-mono">{walletState.address.substring(0, 8)}…</span>
+        </AlertBanner>
       )}
 
-      <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <h3 className="text-lg font-bold text-white flex items-center space-x-2">
-            <FileText className="w-5 h-5 text-purple-400" />
-            <span>Matches Requiring Medical Verification</span>
-          </h3>
-          <span className="text-xs bg-slate-800 text-slate-300 px-3 py-1 rounded-full font-mono">
-            {matches.filter(m => m.status === 'Pending').length} Pending Verification
-          </span>
-        </div>
-
-        {matches.length === 0 ? (
-          <div className="p-12 text-center bg-slate-900/80 rounded-2xl border border-slate-800 text-slate-400 space-y-2">
-            <Stethoscope className="w-8 h-8 text-slate-600 mx-auto" />
-            <p className="text-sm font-semibold">No matches queued for doctor verification.</p>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {matches.map(m => (
-              <div key={m.matchId || m.id} className="bg-slate-900/90 p-6 rounded-2xl border border-slate-800 space-y-4">
-                <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-                  <div>
-                    <span className="font-mono text-xs text-cyan-400 font-bold">{m.matchId}</span>
-                    <h4 className="text-base font-bold text-white mt-0.5">{m.organType} Match</h4>
-                  </div>
-                  <div className="text-right">
-                    <span className="text-xs text-slate-400 block">Score</span>
-                    <span className="text-xl font-extrabold text-emerald-400">{m.totalScore}%</span>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4 text-xs">
-                  <div className="bg-slate-950 p-3 rounded-xl border border-slate-800">
-                    <span className="text-slate-400 block text-[11px]">Donor Information</span>
-                    <span className="font-bold text-white block mt-0.5">{m.donorName || m.donorId}</span>
-                    <span className="text-slate-400 font-mono text-[11px] block">{m.organId}</span>
-                  </div>
-
-                  <div className="bg-slate-950 p-3 rounded-xl border border-slate-800">
-                    <span className="text-slate-400 block text-[11px]">Recipient Patient</span>
-                    <span className="font-bold text-white block mt-0.5">{m.recipientName || m.recipientId}</span>
-                    <span className="text-slate-400 font-mono text-[11px] block">{m.recipientId}</span>
-                  </div>
-                </div>
-
-                <div className="flex items-center justify-between text-xs pt-1">
-                  <button
-                    onClick={() => onOpenBreakdown(m)}
-                    className="text-cyan-400 hover:text-cyan-300 font-semibold flex items-center space-x-1"
-                  >
-                    <Award className="w-3.5 h-3.5" />
-                    <span>View 7-Score Breakdown</span>
-                  </button>
-
-                  <button
-                    onClick={() => onOpenIpfs('QmPZ9gcawA221BaGwtw272hsLtGfLwGfL29G9G112hHs12')}
-                    className="text-purple-400 hover:text-purple-300 font-mono text-[11px] flex items-center space-x-1"
-                  >
-                    <HardDrive className="w-3.5 h-3.5" />
-                    <span>Inspect IPFS Report</span>
-                  </button>
-                </div>
-
-                {/* Status or Doctor Action */}
-                {m.doctorApproved ? (
-                  <div className="bg-emerald-500/10 border border-emerald-500/30 p-3.5 rounded-xl space-y-1 text-xs">
-                    <div className="flex items-center space-x-2 text-emerald-400 font-bold">
-                      <CheckCircle2 className="w-4 h-4" />
-                      <span>Doctor Verification Signed</span>
-                    </div>
-                    <p className="text-slate-300 text-[11px] font-mono truncate">Notes: {m.doctorNotes}</p>
-                  </div>
-                ) : (
-                  <div className="space-y-3 pt-2">
-                    <textarea
-                      rows="2"
-                      placeholder="Doctor medical verification notes & laboratory cross-match sign-off..."
-                      value={doctorNotesMap[m.matchId] || ''}
-                      onChange={e => setDoctorNotesMap({ ...doctorNotesMap, [m.matchId]: e.target.value })}
-                      className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-xs text-slate-200 focus:outline-none focus:border-purple-500"
-                    ></textarea>
-
-                    <button
-                      onClick={() => handleDoctorApprove(m.matchId)}
-                      disabled={approvingId === m.matchId}
-                      className="w-full bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-bold py-2.5 rounded-xl text-xs transition-all shadow-lg shadow-purple-500/20 flex items-center justify-center space-x-2"
-                    >
-                      <Stethoscope className="w-4 h-4" />
-                      <span>{approvingId === m.matchId ? 'Signing Approval...' : 'Sign Doctor Medical Approval'}</span>
-                    </button>
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
-        )}
+      <div className="flex items-center justify-between">
+        <h3 className="flex items-center gap-2 text-sm font-semibold text-white">
+          <FileText className="h-4 w-4 text-violet-300" />
+          Matches for verification
+        </h3>
+        <Badge>
+          {matches.filter((m) => m.status === 'Pending').length} pending
+        </Badge>
       </div>
+
+      {matches.length === 0 ? (
+        <EmptyState icon={Stethoscope} title="Nothing queued" description="No matches are waiting for doctor verification." />
+      ) : (
+        <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
+          {matches.map((m) => (
+            <Card key={m.matchId || m.id} className="space-y-4 p-5">
+              <div className="flex items-start justify-between border-b border-white/5 pb-3">
+                <div>
+                  <p className="font-mono text-xs text-teal-300">{m.matchId}</p>
+                  <h4 className="mt-0.5 font-semibold text-white">{m.organType} match</h4>
+                </div>
+                <p className="font-mono text-xl font-semibold text-emerald-300">{m.totalScore}%</p>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3 text-sm">
+                <div className="rounded-xl border border-white/10 bg-[#0b101a] p-3">
+                  <p className="text-[11px] text-slate-500">Donor</p>
+                  <p className="mt-0.5 font-medium text-white">{m.donorName || m.donorId}</p>
+                </div>
+                <div className="rounded-xl border border-white/10 bg-[#0b101a] p-3">
+                  <p className="text-[11px] text-slate-500">Recipient</p>
+                  <p className="mt-0.5 font-medium text-white">{m.recipientName || m.recipientId}</p>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between text-xs">
+                <button type="button" onClick={() => onOpenBreakdown(m)} className="inline-flex items-center gap-1 text-teal-300">
+                  <Award className="h-3.5 w-3.5" /> Score details
+                </button>
+                <button
+                  type="button"
+                  onClick={() => onOpenIpfs('QmPZ9gcawA221BaGwtw272hsLtGfLwGfL29G9G112hHs12')}
+                  className="inline-flex items-center gap-1 text-violet-300"
+                >
+                  <HardDrive className="h-3.5 w-3.5" /> IPFS report
+                </button>
+              </div>
+
+              {m.doctorApproved ? (
+                <AlertBanner tone="emerald" icon={CheckCircle2}>
+                  Signed. <span className="font-mono text-[11px]">{m.doctorNotes}</span>
+                </AlertBanner>
+              ) : (
+                <div className="space-y-3">
+                  <textarea
+                    rows="2"
+                    placeholder="Verification notes…"
+                    value={doctorNotesMap[m.matchId] || ''}
+                    onChange={(e) => setDoctorNotesMap({ ...doctorNotesMap, [m.matchId]: e.target.value })}
+                    className="ui-input"
+                  />
+                  <Button
+                    variant="purple"
+                    className="w-full"
+                    onClick={() => handleDoctorApprove(m.matchId)}
+                    disabled={approvingId === m.matchId}
+                  >
+                    <Stethoscope className="h-4 w-4" />
+                    {approvingId === m.matchId ? 'Signing…' : 'Sign medical approval'}
+                  </Button>
+                </div>
+              )}
+            </Card>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

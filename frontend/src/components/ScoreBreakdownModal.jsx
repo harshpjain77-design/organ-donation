@@ -1,5 +1,6 @@
 import React from 'react';
-import { X, CheckCircle2, ShieldAlert, Award, Info } from 'lucide-react';
+import { X, CheckCircle2, Award, Info } from 'lucide-react';
+import { Badge, Button } from './ui';
 
 export default function ScoreBreakdownModal({ match, onClose }) {
   if (!match) return null;
@@ -7,153 +8,80 @@ export default function ScoreBreakdownModal({ match, onClose }) {
   const { breakdown, totalScore, recipientName, organType, donorName } = match;
 
   const parameters = [
-    {
-      name: 'Blood Group Compatibility',
-      weight: '25%',
-      maxScore: 25,
-      actualScore: breakdown?.bloodGroupScore ?? 25,
-      description: 'Strict ABO/Rh blood group compatibility check',
-      color: 'from-rose-500 to-red-600'
-    },
-    {
-      name: 'Organ Type Match',
-      weight: '20%',
-      maxScore: 20,
-      actualScore: breakdown?.organTypeScore ?? 20,
-      description: 'Donor organ type matches recipient requirement',
-      color: 'from-purple-500 to-indigo-600'
-    },
-    {
-      name: 'Organ Availability / Freshness',
-      weight: '15%',
-      maxScore: 15,
-      actualScore: breakdown?.availabilityScore ?? 15,
-      description: 'Time elapsed since organ harvest (cold ischemia window)',
-      color: 'from-cyan-500 to-blue-600'
-    },
-    {
-      name: 'Age Discrepancy',
-      weight: '10%',
-      maxScore: 10,
-      actualScore: breakdown?.ageDiffScore ?? 10,
-      description: 'Prefers lower age delta between donor and recipient',
-      color: 'from-amber-500 to-orange-600'
-    },
-    {
-      name: 'HLA Tissue Compatibility',
-      weight: '10%',
-      maxScore: 10,
-      actualScore: breakdown?.hlaScore ?? 10,
-      description: '6-locus tissue antigen matching ratio (HLA-A, B, DR)',
-      color: 'from-emerald-500 to-teal-600'
-    },
-    {
-      name: 'Medical Urgency',
-      weight: '10%',
-      maxScore: 10,
-      actualScore: breakdown?.urgencyScore ?? 10,
-      description: 'Prioritizes Status 1A/Critical emergency patients',
-      color: 'from-red-500 to-rose-600'
-    },
-    {
-      name: 'Waiting List Duration',
-      weight: '10%',
-      maxScore: 10,
-      actualScore: breakdown?.waitingTimeScore ?? 10,
-      description: 'Grants priority for time elapsed on waiting list',
-      color: 'from-sky-500 to-cyan-600'
-    }
+    { name: 'Blood group', weight: '25%', maxScore: 25, actualScore: breakdown?.bloodGroupScore ?? 25, description: 'ABO/Rh compatibility', color: 'bg-rose-400' },
+    { name: 'Organ type', weight: '20%', maxScore: 20, actualScore: breakdown?.organTypeScore ?? 20, description: 'Required organ matches harvest', color: 'bg-violet-400' },
+    { name: 'Freshness', weight: '15%', maxScore: 15, actualScore: breakdown?.availabilityScore ?? 15, description: 'Cold ischemia window', color: 'bg-cyan-400' },
+    { name: 'Age delta', weight: '10%', maxScore: 10, actualScore: breakdown?.ageDiffScore ?? 10, description: 'Donor–recipient age gap', color: 'bg-amber-400' },
+    { name: 'HLA tissue', weight: '10%', maxScore: 10, actualScore: breakdown?.hlaScore ?? 10, description: '6-locus antigen match', color: 'bg-emerald-400' },
+    { name: 'Urgency', weight: '10%', maxScore: 10, actualScore: breakdown?.urgencyScore ?? 10, description: 'Clinical priority status', color: 'bg-rose-400' },
+    { name: 'Wait time', weight: '10%', maxScore: 10, actualScore: breakdown?.waitingTimeScore ?? 10, description: 'Time on the waitlist', color: 'bg-sky-400' },
   ];
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-fadeIn">
-      <div className="bg-slate-900 border border-slate-700/80 rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl">
-        {/* Header */}
-        <div className="p-6 border-b border-slate-800 flex items-center justify-between sticky top-0 bg-slate-900 z-10">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#0a0e16]/80 p-4 backdrop-blur-sm animate-fadeIn">
+      <div className="ui-card max-h-[90vh] w-full max-w-2xl overflow-y-auto">
+        <div className="sticky top-0 z-10 flex items-start justify-between gap-4 border-b border-white/10 bg-[#101622]/95 px-6 py-5">
           <div>
-            <div className="flex items-center space-x-2">
-              <Award className="w-6 h-6 text-cyan-400" />
-              <h3 className="text-xl font-bold text-white">Weighted Score Breakdown</h3>
+            <div className="flex items-center gap-2">
+              <Award className="h-5 w-5 text-teal-300" />
+              <h3 className="text-lg font-semibold text-white">Score breakdown</h3>
             </div>
-            <p className="text-xs text-slate-400 mt-1">
-              Match between <strong className="text-slate-200">{donorName || 'Donor'}</strong> ({organType}) & <strong className="text-slate-200">{recipientName || 'Recipient'}</strong>
+            <p className="mt-1 text-sm text-slate-400">
+              {donorName || 'Donor'} ({organType}) → {recipientName || 'Recipient'}
             </p>
           </div>
-          <button
-            onClick={onClose}
-            className="p-2 text-slate-400 hover:text-white rounded-lg bg-slate-800/60 hover:bg-slate-800 transition-all"
-          >
-            <X className="w-5 h-5" />
+          <button type="button" onClick={onClose} className="rounded-lg p-2 text-slate-400 hover:bg-white/5 hover:text-white">
+            <X className="h-5 w-5" />
           </button>
         </div>
 
-        {/* Content */}
-        <div className="p-6 space-y-6">
-          {/* Aggregate Badge */}
-          <div className="bg-gradient-to-r from-slate-800 to-slate-900 p-5 rounded-xl border border-slate-700 flex items-center justify-between">
+        <div className="space-y-5 p-6">
+          <div className="flex items-center justify-between rounded-2xl border border-white/10 bg-[#0b101a] p-5">
             <div>
-              <span className="text-xs text-slate-400 font-medium uppercase tracking-wider">Overall Compatibility Index</span>
-              <div className="flex items-baseline space-x-2 mt-1">
-                <span className="text-3xl font-extrabold text-white">{totalScore}%</span>
-                <span className="text-xs text-emerald-400 font-semibold flex items-center">
-                  <CheckCircle2 className="w-3.5 h-3.5 mr-1" /> High Compatibility Match
-                </span>
+              <p className="text-[11px] uppercase tracking-wide text-slate-500">Compatibility</p>
+              <div className="mt-1 flex items-baseline gap-2">
+                <span className="text-3xl font-semibold text-white">{totalScore}%</span>
+                <Badge tone="emerald">
+                  <CheckCircle2 className="h-3.5 w-3.5" /> High match
+                </Badge>
               </div>
             </div>
-            <div className="w-16 h-16 rounded-full bg-cyan-500/10 border-2 border-cyan-500/30 flex items-center justify-center">
-              <span className="text-cyan-400 font-extrabold text-lg">{Math.round(totalScore)}</span>
+            <div className="flex h-14 w-14 items-center justify-center rounded-full border border-teal-400/30 bg-teal-500/10 font-mono text-lg text-teal-300">
+              {Math.round(totalScore)}
             </div>
           </div>
 
-          {/* 7 Parameter Rules List */}
-          <div className="space-y-4">
-            <h4 className="text-sm font-semibold text-slate-300 uppercase tracking-wider">7 Weighted Scoring Criteria</h4>
-            {parameters.map((param, index) => {
+          <div className="space-y-3">
+            {parameters.map((param) => {
               const scorePercent = (param.actualScore / param.maxScore) * 100;
               return (
-                <div key={index} className="bg-slate-950/60 p-4 rounded-xl border border-slate-800/80">
-                  <div className="flex items-center justify-between mb-1.5">
-                    <div className="flex items-center space-x-2">
-                      <span className="text-xs font-semibold px-2 py-0.5 rounded bg-slate-800 text-slate-300">
-                        {param.weight}
-                      </span>
-                      <span className="text-sm font-medium text-white">{param.name}</span>
+                <div key={param.name} className="rounded-xl border border-white/10 bg-[#0b101a] p-4">
+                  <div className="mb-2 flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-2">
+                      <Badge>{param.weight}</Badge>
+                      <span className="text-sm text-white">{param.name}</span>
                     </div>
-                    <span className="text-xs font-mono font-bold text-slate-200">
-                      {param.actualScore} / {param.maxScore} pts
+                    <span className="font-mono text-xs text-slate-300">
+                      {param.actualScore}/{param.maxScore}
                     </span>
                   </div>
-
-                  {/* Progress Bar */}
-                  <div className="w-full bg-slate-800 h-2 rounded-full overflow-hidden my-2">
-                    <div
-                      className={`h-full bg-gradient-to-r ${param.color} transition-all duration-500`}
-                      style={{ width: `${scorePercent}%` }}
-                    ></div>
+                  <div className="mb-2 h-1.5 overflow-hidden rounded-full bg-white/10">
+                    <div className={`h-full ${param.color}`} style={{ width: `${scorePercent}%` }} />
                   </div>
-
-                  <p className="text-xs text-slate-400">{param.description}</p>
+                  <p className="text-xs text-slate-500">{param.description}</p>
                 </div>
               );
             })}
           </div>
 
-          <div className="bg-cyan-500/10 border border-cyan-500/20 p-4 rounded-xl flex items-start space-x-3">
-            <Info className="w-5 h-5 text-cyan-400 shrink-0 mt-0.5" />
-            <p className="text-xs text-cyan-200 leading-relaxed">
-              This score is calculated by the decentralized engine based on medical criteria specifications. Final transplant authorization requires dual sign-off from an authorized Doctor and Hospital.
-            </p>
+          <div className="flex gap-3 rounded-xl border border-teal-400/20 bg-teal-500/10 p-4 text-sm text-teal-100">
+            <Info className="mt-0.5 h-4 w-4 shrink-0 text-teal-300" />
+            Final transplant still requires doctor and hospital sign-off.
           </div>
         </div>
 
-        {/* Footer */}
-        <div className="p-4 border-t border-slate-800 bg-slate-900/90 flex justify-end">
-          <button
-            onClick={onClose}
-            className="px-5 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-xl text-sm font-semibold transition-all"
-          >
-            Close
-          </button>
+        <div className="flex justify-end border-t border-white/10 px-6 py-4">
+          <Button variant="secondary" onClick={onClose}>Close</Button>
         </div>
       </div>
     </div>

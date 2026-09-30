@@ -1,33 +1,54 @@
 import React, { useState, useEffect } from 'react';
-import { UserCheck, Users, HeartHandshake, ShieldCheck, Cpu, ArrowRight, Activity, CheckCircle2, Clock, HardDrive, Award, Sparkles, Server, ChevronRight } from 'lucide-react';
+import { UserCheck, Users, HeartHandshake, ShieldCheck, Cpu, ArrowRight, Activity, CheckCircle2, Clock, HardDrive } from 'lucide-react';
 import { getDonors, getRecipients, getOrgans, getMatches, getAuditTrail } from '../services/api';
+import { Card, CardHeader, Button, Badge, StatCard, EmptyState } from '../components/ui';
+import ThreeDOrganCanvas from '../components/ThreeDOrganCanvas';
 
-export default function Dashboard({ currentRole, setActiveTab, onOpenIpfs, onOpenBreakdown }) {
+function matchStatus(m) {
+  if (m.status === 'Completed') {
+    return (
+      <Badge tone="emerald">
+        <CheckCircle2 className="h-3.5 w-3.5" /> Cleared
+      </Badge>
+    );
+  }
+  if (m.status === 'DoctorApproved') {
+    return (
+      <Badge tone="amber">
+        <Clock className="h-3.5 w-3.5" /> Hospital pending
+      </Badge>
+    );
+  }
+  return (
+    <Badge tone="purple">
+      <Clock className="h-3.5 w-3.5" /> Doctor pending
+    </Badge>
+  );
+}
+
+export default function Dashboard({ setActiveTab, onOpenIpfs, onOpenBreakdown }) {
   const [stats, setStats] = useState({
     donorsCount: 0,
     recipientsCount: 0,
     organsCount: 0,
     matchesCount: 0,
-    auditCount: 0
+    auditCount: 0,
   });
-
   const [recentMatches, setRecentMatches] = useState([]);
   const [recentAudit, setRecentAudit] = useState([]);
-  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     loadDashboardData();
   }, []);
 
   const loadDashboardData = async () => {
-    setLoading(true);
     try {
       const [donorsRes, recipRes, organsRes, matchesRes, auditRes] = await Promise.all([
         getDonors(),
         getRecipients(),
         getOrgans(),
         getMatches(),
-        getAuditTrail()
+        getAuditTrail(),
       ]);
 
       setStats({
@@ -35,242 +56,147 @@ export default function Dashboard({ currentRole, setActiveTab, onOpenIpfs, onOpe
         recipientsCount: recipRes.count || recipRes.data?.length || 0,
         organsCount: organsRes.count || organsRes.data?.length || 0,
         matchesCount: matchesRes.count || matchesRes.data?.length || 0,
-        auditCount: auditRes.count || auditRes.data?.length || 0
+        auditCount: auditRes.count || auditRes.data?.length || 0,
       });
-
       setRecentMatches(matchesRes.data || []);
       setRecentAudit(auditRes.data ? auditRes.data.slice(0, 5) : []);
     } catch (err) {
-      console.error("Dashboard data load error:", err);
-    } finally {
-      setLoading(false);
+      console.error('Dashboard data load error:', err);
     }
   };
 
   return (
     <div className="space-y-8 animate-fadeIn">
-      {/* Sleek Hero Banner */}
-      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#0d1322] via-[#090d16] to-[#070a12] p-8 sm:p-10 border border-slate-800/80 shadow-2xl">
-        <div className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-bl from-cyan-500/10 via-indigo-500/10 to-transparent rounded-full blur-3xl pointer-events-none"></div>
-        <div className="relative z-10 max-w-4xl space-y-4">
-          <div className="inline-flex items-center space-x-2 bg-slate-900/90 border border-cyan-500/30 px-3.5 py-1 rounded-full text-cyan-300 text-xs font-mono font-semibold">
-            <Sparkles className="w-3.5 h-3.5 text-cyan-400" />
-            <span>Decentralized Architecture • Ethereum Smart Contracts & IPFS</span>
+      <ThreeDOrganCanvas
+        badgeText="Decentralized 3D AI Match Matrix"
+        title="Automated organ matching & blockchain audit clearance"
+        subtitle="Consent records, recipient waitlists, multi-factor compatibility scoring, doctor verification, and hospital clearance tracked on immutable ledger."
+        height="280px"
+      />
+
+      <Card className="overflow-hidden p-6 sm:p-8 bg-gradient-to-r from-slate-900/90 to-teal-950/40 border-teal-500/20">
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <div className="max-w-2xl space-y-2">
+            <Badge tone="teal">7-Parameter Matching · Real IPFS Records</Badge>
+            <h3 className="text-xl font-semibold text-white">
+              End-to-end multi-stakeholder transplant workflow
+            </h3>
+            <p className="text-xs text-slate-400 leading-relaxed">
+              Donors pledge consent → Recipients register medical profiles → AI ranks matches → Doctors verify clinical history → Hospitals issue clearance on-chain.
+            </p>
           </div>
-
-          <h2 className="text-3xl sm:text-5xl font-black text-white tracking-tight leading-tight">
-            Decentralized Organ <span className="gradient-text">Donor & Recipient Matcher</span>
-          </h2>
-
-          <p className="text-slate-300 text-sm sm:text-base leading-relaxed max-w-2xl font-medium">
-            Multi-hospital interoperability platform using 7-parameter weighted scoring, tamper-proof blockchain audit trails, and encrypted off-chain IPFS document storage.
-          </p>
-
-          <div className="flex flex-wrap gap-3 pt-2">
-            <button
-              onClick={() => setActiveTab('matching')}
-              className="bg-gradient-to-r from-cyan-500 to-sky-500 hover:from-cyan-400 hover:to-sky-400 text-slate-950 font-extrabold px-6 py-3 rounded-2xl text-xs transition-all shadow-lg shadow-cyan-500/20 flex items-center space-x-2"
-            >
-              <Cpu className="w-4 h-4 text-slate-950" />
-              <span>Launch Matching Engine</span>
-              <ChevronRight className="w-4 h-4 text-slate-950" />
-            </button>
-
-            <button
-              onClick={() => setActiveTab('donors')}
-              className="bg-slate-900/90 hover:bg-slate-800 text-slate-200 font-semibold px-5 py-3 rounded-2xl text-xs transition-all border border-slate-700/80 flex items-center space-x-2"
-            >
-              <UserCheck className="w-4 h-4 text-cyan-400" />
-              <span>Pledge Consent</span>
-            </button>
+          <div className="flex flex-wrap gap-3">
+            <Button onClick={() => setActiveTab('matching')}>
+              <Cpu className="h-4 w-4" />
+              Open matching
+              <ArrowRight className="h-4 w-4" />
+            </Button>
+            <Button variant="secondary" onClick={() => setActiveTab('donors')}>
+              <UserCheck className="h-4 w-4" />
+              Pledge consent
+            </Button>
           </div>
         </div>
+      </Card>
+
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
+        <StatCard label="Donors" value={stats.donorsCount} hint="Active pledges" icon={UserCheck} tone="teal" />
+        <StatCard label="Waitlist" value={stats.recipientsCount} hint="Registered candidates" icon={Users} tone="purple" />
+        <StatCard label="Organs" value={stats.organsCount} hint="Listed for match" icon={HeartHandshake} tone="emerald" />
+        <StatCard label="Matches" value={stats.matchesCount} hint="7-factor scores" icon={Activity} tone="rose" />
+        <StatCard label="Audit events" value={stats.auditCount} hint="Ledger entries" icon={ShieldCheck} tone="amber" />
       </div>
 
-      {/* Bento Grid Metrics Overview */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
-        <div className="bento-card p-6 flex flex-col justify-between group">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-mono font-bold text-slate-400 uppercase tracking-wider">Active Donors</span>
-            <div className="w-10 h-10 rounded-xl bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center text-cyan-400 group-hover:scale-110 transition-transform">
-              <UserCheck className="w-5 h-5" />
-            </div>
-          </div>
-          <div className="mt-4">
-            <div className="text-3xl font-black text-white font-mono">{stats.donorsCount}</div>
-            <span className="text-[11px] text-cyan-400 font-semibold">Consent Verified</span>
-          </div>
-        </div>
-
-        <div className="bento-card p-6 flex flex-col justify-between group">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-mono font-bold text-slate-400 uppercase tracking-wider">Waitlist Queue</span>
-            <div className="w-10 h-10 rounded-xl bg-purple-500/10 border border-purple-500/30 flex items-center justify-center text-purple-400 group-hover:scale-110 transition-transform">
-              <Users className="w-5 h-5" />
-            </div>
-          </div>
-          <div className="mt-4">
-            <div className="text-3xl font-black text-white font-mono">{stats.recipientsCount}</div>
-            <span className="text-[11px] text-purple-400 font-semibold">Registered Patients</span>
-          </div>
-        </div>
-
-        <div className="bento-card p-6 flex flex-col justify-between group">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-mono font-bold text-slate-400 uppercase tracking-wider">Organs Listed</span>
-            <div className="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400 group-hover:scale-110 transition-transform">
-              <HeartHandshake className="w-5 h-5" />
-            </div>
-          </div>
-          <div className="mt-4">
-            <div className="text-3xl font-black text-white font-mono">{stats.organsCount}</div>
-            <span className="text-[11px] text-emerald-400 font-semibold">Harvested Ready</span>
-          </div>
-        </div>
-
-        <div className="bento-card p-6 flex flex-col justify-between group">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-mono font-bold text-slate-400 uppercase tracking-wider">Matches</span>
-            <div className="w-10 h-10 rounded-xl bg-rose-500/10 border border-rose-500/30 flex items-center justify-center text-rose-400 group-hover:scale-110 transition-transform">
-              <Activity className="w-5 h-5" />
-            </div>
-          </div>
-          <div className="mt-4">
-            <div className="text-3xl font-black text-white font-mono">{stats.matchesCount}</div>
-            <span className="text-[11px] text-rose-400 font-semibold">AI Weighted Index</span>
-          </div>
-        </div>
-
-        <div className="bento-card p-6 flex flex-col justify-between group">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-mono font-bold text-slate-400 uppercase tracking-wider">Ledger Blocks</span>
-            <div className="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-400 group-hover:scale-110 transition-transform">
-              <ShieldCheck className="w-5 h-5" />
-            </div>
-          </div>
-          <div className="mt-4">
-            <div className="text-3xl font-black text-white font-mono">{stats.auditCount}</div>
-            <span className="text-[11px] text-amber-400 font-semibold">On-Chain Verified</span>
-          </div>
-        </div>
-      </div>
-
-      {/* Main Grid: Matches Pipeline & Real-Time Blockchain Stream */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Left Column: Recent Matches */}
-        <div className="lg:col-span-2 space-y-6">
-          <div className="bento-card p-6">
-            <div className="flex items-center justify-between mb-6">
-              <div>
-                <h3 className="text-lg font-bold text-white flex items-center space-x-2">
-                  <Activity className="w-5 h-5 text-cyan-400" />
-                  <span>Transplant Clearance Pipeline</span>
-                </h3>
-                <p className="text-xs text-slate-400 mt-0.5">Multi-hospital verification status</p>
-              </div>
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+        <Card className="p-6 lg:col-span-2">
+          <CardHeader
+            icon={Activity}
+            title="Clearance pipeline"
+            subtitle="Doctor and hospital dual sign-off"
+            tone="teal"
+            action={
               <button
+                type="button"
                 onClick={() => setActiveTab('matching')}
-                className="text-xs text-cyan-400 hover:text-cyan-300 font-semibold flex items-center space-x-1"
+                className="text-xs font-medium text-teal-300 hover:text-teal-200"
               >
-                <span>Matching Engine</span>
-                <ArrowRight className="w-3.5 h-3.5" />
+                Matching →
               </button>
-            </div>
-
-            {recentMatches.length === 0 ? (
-              <div className="p-8 text-center bg-[#060911]/80 rounded-2xl border border-slate-800 text-slate-400 space-y-2">
-                <Cpu className="w-8 h-8 text-slate-600 mx-auto" />
-                <p className="text-sm font-medium">No active matches generated.</p>
-              </div>
-            ) : (
-              <div className="space-y-3">
-                {recentMatches.map(m => (
-                  <div key={m.matchId || m.id} className="bg-[#070b14]/90 p-4 rounded-xl border border-slate-800/90 flex flex-wrap items-center justify-between gap-4 hover:border-slate-700 transition-all">
-                    <div>
-                      <div className="flex items-center space-x-2">
-                        <span className="font-mono text-xs font-bold text-cyan-400">{m.matchId}</span>
-                        <span className="text-sm font-bold text-white">
-                          {m.organType} ({m.recipientName})
-                        </span>
-                      </div>
-                      <div className="text-xs text-slate-400 mt-1 flex items-center space-x-3">
-                        <span>Donor: {m.donorName || m.donorId}</span>
-                        <span>•</span>
-                        <span>Score: <strong className="text-emerald-400 font-mono">{m.totalScore}%</strong></span>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center space-x-3">
-                      <button
-                        onClick={() => onOpenBreakdown(m)}
-                        className="px-3 py-1.5 bg-slate-900 hover:bg-slate-800 text-slate-200 rounded-lg text-xs font-semibold border border-slate-700 flex items-center space-x-1"
-                      >
-                        <Award className="w-3.5 h-3.5 text-amber-400" />
-                        <span>Breakdown</span>
-                      </button>
-
-                      {m.status === 'Completed' ? (
-                        <span className="bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 text-xs font-semibold px-3 py-1 rounded-full flex items-center space-x-1">
-                          <CheckCircle2 className="w-3.5 h-3.5" />
-                          <span>Transplant Cleared</span>
-                        </span>
-                      ) : m.status === 'DoctorApproved' ? (
-                        <span className="bg-amber-500/10 text-amber-400 border border-amber-500/30 text-xs font-semibold px-3 py-1 rounded-full flex items-center space-x-1">
-                          <Clock className="w-3.5 h-3.5" />
-                          <span>Pending Hospital</span>
-                        </span>
-                      ) : (
-                        <span className="bg-purple-500/10 text-purple-400 border border-purple-500/30 text-xs font-semibold px-3 py-1 rounded-full flex items-center space-x-1">
-                          <Clock className="w-3.5 h-3.5" />
-                          <span>Pending Doctor</span>
-                        </span>
-                      )}
-                    </div>
+            }
+          />
+          {recentMatches.length === 0 ? (
+            <EmptyState icon={Cpu} title="No matches yet" description="Run the matching engine after organs are listed." />
+          ) : (
+            <div className="space-y-2">
+              {recentMatches.map((m) => (
+                <div
+                  key={m.matchId || m.id}
+                  className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-white/5 bg-[#0b101a]/70 px-4 py-3"
+                >
+                  <div>
+                    <p className="text-sm font-medium text-white">
+                      {m.organType} · {m.recipientName}
+                    </p>
+                    <p className="mt-0.5 text-xs text-slate-500">
+                      <span className="font-mono text-teal-300/80">{m.matchId}</span>
+                      <span className="mx-2">·</span>
+                      Donor {m.donorName || m.donorId}
+                      <span className="mx-2">·</span>
+                      Score {m.totalScore}%
+                    </p>
                   </div>
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Right Column: Live Blockchain Audit Stream */}
-        <div className="space-y-6">
-          <div className="bento-card p-6">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-sm font-bold text-white flex items-center space-x-2">
-                <ShieldCheck className="w-4 h-4 text-emerald-400" />
-                <span>On-Chain Audit Stream</span>
-              </h3>
-              <button
-                onClick={() => setActiveTab('audit')}
-                className="text-xs text-cyan-400 hover:text-cyan-300 font-semibold"
-              >
-                Explorer
-              </button>
-            </div>
-
-            <div className="space-y-3">
-              {recentAudit.map(item => (
-                <div key={item.entryId || item.timestamp} className="bg-[#060911]/90 p-3.5 rounded-xl border border-slate-800/90 text-xs">
-                  <div className="flex items-center justify-between mb-1">
-                    <span className="font-mono text-cyan-400 font-bold text-[11px]">#{item.entryId} {item.eventType}</span>
-                    <span className="text-slate-500 text-[10px]">{new Date(item.timestamp).toLocaleTimeString()}</span>
+                  <div className="flex items-center gap-2">
+                    <Button variant="secondary" className="px-3 py-1.5 text-xs" onClick={() => onOpenBreakdown(m)}>
+                      Breakdown
+                    </Button>
+                    {matchStatus(m)}
                   </div>
-                  <p className="text-slate-300 text-[11px] truncate">{item.details}</p>
-                  {item.ipfsHash && (
-                    <button
-                      onClick={() => onOpenIpfs(item.ipfsHash)}
-                      className="mt-1 text-purple-400 hover:text-purple-300 font-mono text-[10px] flex items-center space-x-1"
-                    >
-                      <HardDrive className="w-3 h-3" />
-                      <span>{item.ipfsHash.substring(0, 14)}...</span>
-                    </button>
-                  )}
                 </div>
               ))}
             </div>
+          )}
+        </Card>
+
+        <Card className="p-6">
+          <CardHeader
+            icon={ShieldCheck}
+            title="Ledger stream"
+            subtitle="Latest on-chain events"
+            tone="emerald"
+            action={
+              <button
+                type="button"
+                onClick={() => setActiveTab('audit')}
+                className="text-xs font-medium text-teal-300 hover:text-teal-200"
+              >
+                Explorer
+              </button>
+            }
+          />
+          <div className="space-y-2">
+            {recentAudit.map((item) => (
+              <div key={item.entryId || item.timestamp} className="rounded-xl border border-white/5 bg-[#0b101a]/70 p-3">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="font-mono text-[11px] text-teal-300">
+                    #{item.entryId} {item.eventType}
+                  </span>
+                  <span className="text-[10px] text-slate-500">{new Date(item.timestamp).toLocaleTimeString()}</span>
+                </div>
+                <p className="mt-1 truncate text-xs text-slate-400">{item.details}</p>
+                {item.ipfsHash && (
+                  <button
+                    type="button"
+                    onClick={() => onOpenIpfs(item.ipfsHash)}
+                    className="mt-1 inline-flex items-center gap-1 font-mono text-[10px] text-violet-300"
+                  >
+                    <HardDrive className="h-3 w-3" />
+                    {item.ipfsHash.substring(0, 14)}…
+                  </button>
+                )}
+              </div>
+            ))}
           </div>
-        </div>
+        </Card>
       </div>
     </div>
   );
